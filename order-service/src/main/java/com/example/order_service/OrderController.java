@@ -1,17 +1,20 @@
 package com.example.order_service;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import java.util.*;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
     private final RestClient restClient;
 
-    public OrderController(RestClient.Builder builder) {
-        this.restClient = builder
+    public OrderController() {
+        this.restClient = RestClient.builder()
                 .baseUrl("http://localhost:8081")
                 .build();
     }
@@ -25,10 +28,15 @@ public class OrderController {
     }
 
     @GetMapping("/product/{id}")
-    public String getProduct(@PathVariable int id) {
-        return restClient.get()
-                .uri("/api/products/{id}", id)
-                .retrieve()
-                .body(String.class);
+    public ResponseEntity<String> getProduct(@PathVariable int id) {
+        try {
+            String body = restClient.get()
+                    .uri("/api/products/{id}", id)
+                    .retrieve()
+                    .body(String.class);
+            return ResponseEntity.ok(body);
+        } catch (HttpClientErrorException.NotFound e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
